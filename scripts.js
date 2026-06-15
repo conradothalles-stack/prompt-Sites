@@ -51,4 +51,3 @@ Todo o conteúdo em português, criativo e específico para o negócio.`
     resultadoSite.srcdoc = resultado;
 }
 // Simulação de resposta da IA  
-
