@@ -27,7 +27,7 @@ Todo o conteúdo em português, criativo e específico para o negócio.`
         method: "POST",
         headers: {
             "Content-Type": "application/json",
-            "Authorization": "Bearer REDACTED"
+            "Authorization": "Bearer COLOQUE_SUA_CHAVE_AQUI"
         },
         body: JSON.stringify({
             "model": "llama-3.3-70b-versatile",
