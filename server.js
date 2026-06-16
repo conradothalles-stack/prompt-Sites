@@ -57,7 +57,7 @@ Todo o conteúdo em português, criativo e específico para o negócio.`;
         "Authorization": `Bearer ${process.env.GROQ_API_KEY}`
       },
       body: JSON.stringify({
-        model: "llama-3.3-70b-versatile",
+        model: "llama-3.1-8b-instant",
         messages: [
           { role: "system", content: prompt },
           { role: "user", content: texto }
