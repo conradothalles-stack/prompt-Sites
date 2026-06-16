@@ -1,6 +1,19 @@
 async function gerarCodigo() {
+    const blocoCodigo = document.querySelector(".bloco-codigo");
+    const resultadoSite = document.querySelector(".bloco-site");
+    const texto = document.querySelector(".caixa-texto").value.trim();
+
+    if (!texto) {
+        blocoCodigo.textContent = "Por favor, descreva o seu negócio antes de gerar o site.";
+        resultadoSite.srcdoc = "";
+        return;
+    }
+
     console.log("Gerando código...");
-    let prompt = `Você é um designer web premiado e Programador. 
+    blocoCodigo.textContent = "Aguarde... gerando o site.";
+    resultadoSite.srcdoc = "";
+
+    const prompt = `Você é um designer web premiado e Programador. 
 Crie uma landing page COMPLETA e VISUALMENTE IMPRESSIONANTE para o negócio descrito.
 
                     Regras de resposta:
@@ -21,33 +34,61 @@ Crie uma landing page COMPLETA e VISUALMENTE IMPRESSIONANTE para o negócio desc
                     - Depoimento de cliente
                     - Footer com contato
 
-Todo o conteúdo em português, criativo e específico para o negócio.`
-    let texto = document.querySelector(".caixa-texto").value
-    let resposta = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "Authorization": "Bearer COLOQUE_SUA_CHAVE_AQUI"
-        },
-        body: JSON.stringify({
-            "model": "llama-3.3-70b-versatile",
-            "messages": [
-                {
-                    "role": "user",
-                    "content": texto
-                },
-                {
-                    "role": "system",
-                    "content": prompt
-                }
-            ],
-        })
-    });
-    let dados = await resposta.json();
-    let resultado = dados.choices[0].message.content;
-    document.querySelector(".bloco-codigo").textContent = resultado;
-    console.log(dados);
-    let resultadoSite = document.querySelector(".bloco-site");
-    resultadoSite.srcdoc = resultado;
+Todo o conteúdo em português, criativo e específico para o negócio.`;
+
+    try {
+        const resposta = await fetch("/api/gerar", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                texto
+            })
+        });
+
+        const corpo = await resposta.text();
+        if (!resposta.ok) {
+            blocoCodigo.textContent = `Erro na API (${resposta.status}): ${corpo}`;
+            console.error("Erro na API:", resposta.status, corpo);
+            return;
+        }
+
+        let dados;
+        try {
+            dados = JSON.parse(corpo);
+        } catch (erro) {
+            blocoCodigo.textContent = "A resposta da API não pôde ser lida. Veja o console.";
+            console.error("Falha ao analisar JSON:", erro, corpo);
+            return;
+        }
+
+        const resultado = dados?.choices?.[0]?.message?.content || dados?.choices?.[0]?.text;
+        if (!resultado) {
+            blocoCodigo.textContent = "A resposta da IA não trouxe HTML válido.";
+            console.error("Resposta inválida:", dados);
+            return;
+        }
+
+        blocoCodigo.textContent = resultado;
+        resultadoSite.srcdoc = formatResultadoParaSrcdoc(resultado);
+    } catch (erro) {
+        blocoCodigo.textContent = "Falha ao conectar com a API. Veja o console.";
+        console.error("Erro de fetch:", erro);
+    }
+}
+
+function formatResultadoParaSrcdoc(resultado) {
+    let html = resultado.trim();
+
+    if (html.startsWith("```")) {
+        html = html.replace(/^```(?:html)?\s*/i, "").replace(/```$/i, "").trim();
+    }
+
+    if (!/<!doctype html>|<html|<head|<body/i.test(html)) {
+        html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"></head><body>${html}</body></html>`;
+    }
+
+    return html;
 }
 // Simulação de resposta da IA  
